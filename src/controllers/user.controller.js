@@ -76,7 +76,7 @@ if(!isUserCreated){
     throw new ApiError(500,"Something went wrong in server while creating the user profile");
 }
 else{
-    return new ApiResponse(201,isUserCreated,"created user profile sucessfully")
+    return res.status(201).json( new ApiResponse(200,isUserCreated,"created user profile sucessfully"))
 }
 
 
