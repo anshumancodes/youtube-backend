@@ -2,9 +2,9 @@ const asyncHandler =(func)=>{
     // Higher order function->
 
     
-    async(req,res,next)=>{
+   return async(req,res,next)=>{
         try {
-            await func((req,res,next));
+            await func(req,res,next);
             // executes the function!
         } catch (error) {
             // throws error and false success flag to client side
@@ -18,3 +18,5 @@ const asyncHandler =(func)=>{
         }
     }
 }
+
+export {asyncHandler}
