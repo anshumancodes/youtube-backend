@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
-import fs from fs;
+import fs from "fs";
 
 
 
@@ -28,6 +28,7 @@ import fs from fs;
             url:uploadResponse.url
         }
         console.log(" file uploaded sucessfully! ",uploadDetails);
+        fs.unlinkSync(filePath);
         
         // returns user with upload url
         return uploadDetails.url;
