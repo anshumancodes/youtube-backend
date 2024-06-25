@@ -8,6 +8,7 @@ import {
 import { User } from "../models/user.model.js";
 import { uploadOnCloud } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import jwt from "jsonwebtoken"
 
 const resigterUser = asyncHandler(async (req, res) => {
   // get user data from client side
@@ -183,4 +184,43 @@ const logOutUser=asyncHandler(async(req,res)=>{
 
 })
 
-export { resigterUser, loginUser ,logOutUser };
+
+const reassignAcessToken=asyncHandler(async()=>{
+  const refreshTokenWithUserReq=req.cookies.refreshToken || req.body.refreshToken;
+  if(!refreshTokenWithUserReq){
+    throw new ApiError(401,"Unauthroized access attempt . please login! ")
+
+
+  }
+
+  try {
+    const decodedToken= jwt.verify(refreshTokenWithUserReq,process.env. REFRSH_TOKEN_KEY);
+  
+    const UserfreshTokenInDb=await User.findById(decodedToken?._id).refreshToken;
+  
+    if(!UserfreshTokenInDb){
+      throw new ApiError(401,"Invalid refresh Token")
+    }
+  
+    if(refreshTokenWithUserReq!=UserfreshTokenInDb){
+    throw new ApiError(401,"Expired Refresh token or used")
+    }
+  
+    const options={
+      httpOnly:true,
+      secure:true
+    }
+    const {accessToken,newRefreshToken}= await generateAccessAndRefreshTokens(decodedToken._id);
+    return res.status(200).cookie("accessToken",accessToken,options).
+    cookie("refreshToken",newRefreshToken,options).
+    json(new ApiResponse("200",{
+      accessToken,refreshToken:newRefreshToken
+    },"reassigned tokens"))
+    
+  } catch (error) {
+    throw new ApiError(401,error?.message || "something went wrong while reassigning tokens")
+    
+  }
+})
+
+export { resigterUser, loginUser ,logOutUser,reassignAcessToken };
