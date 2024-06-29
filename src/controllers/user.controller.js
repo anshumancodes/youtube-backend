@@ -257,4 +257,56 @@ const HandleForgotPassword=asyncHandler(async(req,res,next)=>{
 
 })
 
-export { resigterUser, loginUser ,logOutUser,reassignAcessToken,changePassword,getCurrentUser,HandleForgotPassword };
+const updateUserAvatar=asyncHandler(async()=>{
+ 
+  const avatarLocalPath = req.file?.avatar?.path;
+
+  if(!avatarLocalPath){
+    throw new ApiError(400,"avatar is required");
+
+  }
+
+  const avatarUpdatedonCloud=await uploadOnCloud(avatarLocalPath);
+
+  if(!avatarUpdatedonCloud.url){
+    throw new ApiError(400,"avatar is not uploaded failed please try again");
+
+  }
+
+  await User.findByIdAndUpdate(req.user._id,{
+    "$set":{
+      avatar:avatarUpdated.url
+    }
+  },
+  {new:true}).select("-password");
+  
+
+  return res.status(200).json(new ApiResponse("200",{updatedAvatarUrl:avatarUpdated.url},"Avatar image updated successfully!"));
+
+
+
+ 
+})
+
+const updateCoverImage=asyncHandler(async()=>{
+
+  const coverImageLocalPath=req.file?.coverImage?.path;
+  if(!coverImageLocalPath){throw new ApiError(400,"cover image is required");}
+  const coverImageUpdatedOnCloud=await uploadOnCloud(coverImageLocalPath);
+  if(!coverImageUpdatedOnCloud.url)
+    {throw new ApiError(400,"cover image is not uploaded , upload failed please try again");}
+  
+  await User.findByIdAndUpdate(req.user._id,{
+    "$set":{
+      coverImage:coverImageUpdatedOnCloud.url
+    }
+  },
+  {new:true}).select("-password");
+
+  return res.status(200).json(new ApiResponse("200",{updatedCoverImageUrl:coverImageUpdatedOnCloud.url},"cover image updated successfully!"));
+
+
+
+})
+
+export { resigterUser, loginUser ,logOutUser,reassignAcessToken,changePassword,getCurrentUser,HandleForgotPassword ,updateCoverImage,updateUserAvatar};
