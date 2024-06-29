@@ -223,4 +223,38 @@ const reassignAcessToken=asyncHandler(async()=>{
   }
 })
 
-export { resigterUser, loginUser ,logOutUser,reassignAcessToken };
+const changePassword=asyncHandler(async(req,res)=>{
+
+  const { oldPassword,newPassword,confirmPassword}=req.body;
+
+  const tokenWithUser= req.cookies.refreshToken;
+  const decodedToken=jwt.verify(tokenWithUser,process.env.REFRSH_TOKEN_KEY);
+  const user=await User.findById(decodedToken._id);
+
+  const passwordCheck=await user.isPasswordCorrect(oldPassword);
+  if(!passwordCheck){
+    throw new ApiError(401,"old password is incorrect")
+  }
+
+  if(newPassword!=confirmPassword){
+    throw new ApiError(401,"new password and confirm password does not match")
+
+
+  }
+  user.password=newPassword
+  await user.save({validateBeforeSave:false});
+  res.status(200).json(new ApiResponse("200","password changed successfully"))
+
+})
+
+const getCurrentUser=asyncHandler(async(req,res)=>{
+  const user=req.user;
+  res.status(200).json(new ApiResponse("200",user,"current user fetched successfully"))
+
+})
+const HandleForgotPassword=asyncHandler(async(req,res,next)=>{
+  const {email ,username}=req.body;
+
+})
+
+export { resigterUser, loginUser ,logOutUser,reassignAcessToken,changePassword,getCurrentUser,HandleForgotPassword };
