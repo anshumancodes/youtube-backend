@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import fs from "fs";
+import { asyncHandler } from './asyncHandler';
 
 
 
@@ -43,4 +44,20 @@ import fs from "fs";
         }
     }
 
-export {uploadOnCloud}
+    const deleteOldUploadOnUpdate=asyncHandler(async(fileurloncloud)=>{
+        try {
+            const publicId = fileurloncloud.split('/').slice(-1)[0].split('.')[0];
+            const result = await cloudinary.uploader.destroy(publicId);
+
+            return result;
+        } catch (error) {
+
+            return error;
+            
+        }
+
+       
+    });
+
+
+export {uploadOnCloud,deleteOldUploadOnUpdate};
