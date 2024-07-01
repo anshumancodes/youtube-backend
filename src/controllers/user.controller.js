@@ -6,7 +6,7 @@ import {
   validateFormFields,
 } from "../utils/FormValidation.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloud } from "../utils/cloudinary.js";
+import { deleteOldUploadOnUpdate, uploadOnCloud } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
 
@@ -273,15 +273,17 @@ const updateUserAvatar=asyncHandler(async()=>{
 
   }
 
-  await User.findByIdAndUpdate(req.user._id,{
+  const user=await User.findByIdAndUpdate(req.user._id,{
     "$set":{
-      avatar:avatarUpdated.url
+      avatar:avatarUpdatedonCloud.url
     }
-  },
-  {new:true}).select("-password");
+  }).select("-password");
   
 
-  return res.status(200).json(new ApiResponse("200",{updatedAvatarUrl:avatarUpdated.url},"Avatar image updated successfully!"));
+  const avatarBeforeUpdate=user.avatar;
+  await deleteOldUploadOnUpdate(avatarBeforeUpdate);  // deletes avatar file on cloudinary on update;
+
+  return res.status(200).json(new ApiResponse("200",{updatedAvatarUrl:avatarUpdatedonCloud.url},"Avatar image updated successfully!"));
 
 
 
@@ -306,6 +308,56 @@ const updateCoverImage=asyncHandler(async()=>{
   return res.status(200).json(new ApiResponse("200",{updatedCoverImageUrl:coverImageUpdatedOnCloud.url},"cover image updated successfully!"));
 
 
+
+})
+
+const getUserChannel=asyncHandler(async(req,res)=>{
+  const {username}=req.params;
+
+  if(!username?.trim()){
+    throw new ApiError(400,"username missing!")
+  }
+
+ const channel= await User.aggregate([
+    {
+      $match:{
+        username:username?.toLowerCase()
+      }
+    },
+    {
+      $lookup:{
+        from:"subscriptions",
+        localField:"_id",
+        foreignField:"channel",
+        as:"subscribers"
+      }
+    },{
+      $lookup:{
+        from:"subscriptions",
+        localField:"_id",
+        foreignField:"subscriber",
+        as:"subscribedTo"
+
+      }
+    },{
+      $addFields:{
+        subscribers:{$size:"$subscribers"},
+        subscribedTo:{$size:"$subscribedTo"}
+      }
+    },{
+      $project:{
+        _id:1,
+        username:1,
+        fullname:1,
+        email:1,
+        subscribers:1,
+        subscribedTo:1,
+        avatar:1,
+        coverImage:1,
+
+    }}
+  ])
+  res.status(200).json(new ApiResponse(200,{channel},"channel info"))
 
 })
 
