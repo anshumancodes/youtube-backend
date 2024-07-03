@@ -9,6 +9,7 @@ import { User } from "../models/user.model.js";
 import { deleteOldUploadOnUpdate, uploadOnCloud } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
+import mongoose, { Types } from "mongoose";
 
 const resigterUser = asyncHandler(async (req, res) => {
   // get user data from client side
@@ -359,6 +360,59 @@ const getUserChannel=asyncHandler(async(req,res)=>{
   ])
   res.status(200).json(new ApiResponse(200,{channel},"channel info"))
 
+});
+
+const getWatchHistory=asyncHandler(async()=>{
+  const user = await User.aggregate([
+
+    {
+      $match:{
+        _id:new mongoose.Types.ObjectId(req.user._id)
+      }
+    },
+    {
+      $lookup:{
+        from:"videos",
+        localField:"watchHistory",
+        foreignField:"_id",
+        as:"watchHistory",
+        pipeline:[
+          {  // sub pipeline to get owner from ref to users
+            $lookup:{
+              from:"users",
+              localField:"owner",
+              foreignField:"_id",
+              as:"owner",
+              pipeline:[
+                // to filter out only required fields from the whole user array
+                {
+                  $project:{
+                    username:1,
+                    fullname:1,
+                    avatar:1
+                  
+                  }
+                }
+              ]
+
+            }
+          },{
+            // gives a new field as owner 
+            $addFields:{
+              owner:{
+                $first:"$owner"
+              }
+
+            }
+          }
+        ]
+        
+  
+      }
+    }
+  ])
+
+  return res.status(200).json(new ApiResponse(200,user[0].watchHistory,"watch History fetched!"))
 })
 
-export { resigterUser, loginUser ,logOutUser,reassignAcessToken,changePassword,getCurrentUser,HandleForgotPassword ,updateCoverImage,updateUserAvatar};
+export { resigterUser, loginUser ,logOutUser,reassignAcessToken,changePassword,getCurrentUser,HandleForgotPassword ,updateCoverImage,updateUserAvatar,getUserChannel,getWatchHistory};
