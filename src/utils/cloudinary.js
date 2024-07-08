@@ -43,6 +43,39 @@ import { asyncHandler } from './asyncHandler';
             
         }
     }
+    const uploadVideo=async (filePath) =>{
+        try {
+           if(!filePath)  return null;
+
+           const uploadResponse=await cloudinary.uploader.upload(filePath,{resource_type:'video'})
+
+
+        //    if file uploaded sucessfully!
+
+        // upload details ;
+
+        const uploadDetails={
+            FileName:uploadResponse.original_filename,
+            public_id:uploadResponse.public_id,
+            url:uploadResponse.url,
+            duration:uploadResponse.duration,
+
+        }
+        console.log(" file uploaded sucessfully! ",uploadDetails);
+        fs.unlinkSync(filePath);
+        
+        // returns user with upload url
+        return uploadDetails;
+
+
+        } catch (error) {
+            fs.unlinkSync(filePath) //remove local file from our server to enable reupload!
+            return null
+
+
+            
+        }
+    }
 
     const deleteOldUploadOnUpdate=asyncHandler(async(fileurloncloud)=>{
         try {
@@ -60,4 +93,4 @@ import { asyncHandler } from './asyncHandler';
     });
 
 
-export {uploadOnCloud,deleteOldUploadOnUpdate};
+export {uploadOnCloud,deleteOldUploadOnUpdate,uploadVideo};
