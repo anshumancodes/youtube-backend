@@ -16,8 +16,10 @@ app.use(bodyParser.urlencoded({ extended: false }))
 // routes
 
 import userRouter from "./routes/user.routes.js";
+import videoRouter from "./routes/video.routes.js"
 
 app.use("/api/v0/user",userRouter);
+app.use("/api/v0/video",videoRouter);
 
 
 
