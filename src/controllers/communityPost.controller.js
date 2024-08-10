@@ -3,69 +3,100 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { communityPost } from "../models/communityPost.model.js";
 import mongoose from "mongoose";
-
+import {User} from "../models/user.model.js"
 
 
 const composePost=asyncHandler(async(req,res)=>{
 
 
     const {content}=req.body;
+    const user=req.user;
+    const owner=await User.findById(user._id).select("-password -watchHistory -avatar -coverImage -refreshToken ");
+
     if(!content){
-        throw new ApiError(400,"content is required");
-    }
-    const writeContent= async(content)=>{
-        
-
-        const postOwner=communityPost.aggregate([
-            {
-                $match: {
-                    _id: new mongoose.Types.ObjectId(req.user._id),}
-            },{
-                $lookup:{
-                    from:"users",
-                    localField:"owner",
-                    foreignField:"_id",
-                    as:"owner"
-                }
-            },
-            {
-                $project:{
-                    username:1,
-                    fullname:1,
-                    avatar:1,
-                }
-            },{
-                $addFields:{
-                    owner:{
-                        $first:"$owner"
-                }
-            }}
-        ])
-
-        const newcommunitypost=await communityPost.create({
-            content,
-            owner:postOwner
-        })
-        
-
-        return res.status(200).json(new ApiResponse(200,{
-            content:newcommunitypost,
-            owner:owner
-        },"communityPost created sucessfully!"))
-
-        
+        return new ApiError(400,"Please Insert some content");
     }
 
-    try {
+   const post= await communityPost.create({
+        content,
+        owner
+    });
 
-        await writeContent(content)
-        
-    } catch (error) {
-        throw new ApiError(500,"Internal Server Error");
-        
+    if(!post){
+        return new ApiError(500,"Failed to create post");
     }
+
+    return res.status(200).json(new ApiResponse(200,"Post created Succesfully ",{
+        content:post.content,
+        authorDetails:post.owner
+    }))
+
+
+
+
+
+    
+
+});
+
+const updatePost=asyncHandler(async(req,res)=>{
+    const {content}=req.body;
+    const {postId}=req.params;
+   
+    if(!content){
+        return new ApiError(400,"Please Insert some content that to be updated");
+    }
+    if(!postId){
+        return new ApiError(400,"Bad Request", "Missing required parameter : postId");
+    }
+   const updatedPost=await communityPost.findOneAndUpdate({_id:postId},{
+        "$set":{
+            content:content
+        }
+    },{new:true});
+
+    return res.status(200).json(new ApiResponse(200,{
+        content:updatedPost.content
+    },"Post content updated Succesfully!"))
 
 })
 
+const getPosts=asyncHandler(async(req,res)=>{
+    const {user}=req.user;
 
-export {composePost}
+    const posts=await communityPost.find({
+        
+            owner:user._id
+
+        
+    });
+    if(!posts){
+        return new ApiError(404,"cant retrieve posts");
+    }
+    if(posts.length==0){
+        return new ApiError(404,"No posts found");
+    }
+
+
+    return res.status(200).json(new ApiResponse(200,"Posts retrieved Succesfully!",{
+        posts:posts
+    }));
+
+});
+
+const deletePost=asyncHandler(async(req,res)=>{
+    const {postId}=req.params;
+    if(!postId){
+        return new ApiError(400,"Bad Request", "Missing required parameter : postId");
+    }
+
+    const deleted=await communityPost.findOneAndDelete({
+        _id:postId
+    })
+    if(!deleted){
+        return new ApiError(500,"Unable to delete post");
+    }
+    return res.status(200).json(new ApiResponse(200,"Post deleted Succesfully!"));
+})
+
+export {composePost,updatePost,getPosts,deletePost}
