@@ -41,7 +41,7 @@ Api live at  ; https://youtube-backend-1ybt.onrender.com [50-second-delay]
 
 #### Get all items
 
-```http
+```bash
   Route:
   /api/v0/user
 
