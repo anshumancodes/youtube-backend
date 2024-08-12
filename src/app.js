@@ -17,9 +17,11 @@ app.use(bodyParser.urlencoded({ extended: false }))
 
 import userRouter from "./routes/user.routes.js";
 import videoRouter from "./routes/video.routes.js"
+import communityPostRouter from "./routes/community.routes.js"
 
 app.use("/api/v0/user",userRouter);
 app.use("/api/v0/video",videoRouter);
+app.use("/api/v0/post",communityPostRouter);
 
 
 
