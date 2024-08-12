@@ -24,6 +24,14 @@ app.use("/api/v0/video",videoRouter);
 app.use("/api/v0/post",communityPostRouter);
 
 
+// test path 
+
+app.get("/api-health", (req, res) => {
+    return res.status(200).json({ message: "App is on" });
+});
+
+
+
 
 
 export default app;
