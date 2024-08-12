@@ -62,10 +62,11 @@ Api live at  ; https://youtube-backend-1ybt.onrender.com [50-second-delay]
 | `/get-watch-history`    | GET        | Retrieves the watch history of the authenticated user.            | Yes                         | None                |
 
 
+
+## Video routes
 Route:
 /api/v0/video
 
-## Video Endpoints
 
 | **Endpoint**           | **Method** | **Use**                                                   | **Requires Authentication** | **File Uploads**          |
 |------------------------|------------|-----------------------------------------------------------|-----------------------------|---------------------------|
@@ -73,6 +74,21 @@ Route:
 | `/play/:videoId`       | GET        | Retrieves and plays the video by its ID.                 | No                          | None                      |
 | `/update/:videoId`     | PUT        | Updates details of a video by its ID. Can only be done by the owner. | Yes                         | `thumbnail` (single file) |
 | `/delete/:videoId`     | DELETE     | Deletes a video by its ID.                               | Yes                         | None                      |
+
+
+
+## Community Posts Endpoints
+
+route:
+/api/v0/post
+
+| **Endpoint**           | **Method** | **Use**                                                       | **Requires Authentication** | **File Uploads** |
+|------------------------|------------|---------------------------------------------------------------|-----------------------------|------------------|
+| `/compose`             | POST       | Composes a new community post.                                | Yes                         | None             |
+| `/posts`               | GET        | Retrieves all posts for the authenticated user.               | Yes                         | None             |
+| `/update/:postId`      | PUT        | Updates a specific community post by its ID.                  | Yes                         | None             |
+| `/delete/:postId`      | DELETE     | Deletes a specific community post by its ID.                  | Yes                         | None             |
+
 
 
   
