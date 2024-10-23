@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { Video } from "../models/video.model.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
+import mongoose from "mongoose";
 import {
   uploadOnCloud,
 
@@ -39,6 +40,7 @@ const uploadVideoOnchannel = asyncHandler(async (req, res) => {
   const thumbnail = await uploadOnCloud(thumbnailLocalPath); // directly returns the url
 
   const owner = await User.findById(req.user._id);
+  
 
   const videoUpload = await Video.create({
 
@@ -73,21 +75,46 @@ const uploadVideoOnchannel = asyncHandler(async (req, res) => {
 
 
 const getVideoById = asyncHandler(async (req, res) => {
-  // approach to algo
-  //  get videoId from paramas , the id will of the specific document in the collection ,
-  //  now with the id search and fetch the videoFile link and fetch the video and send 
-    const { videoId } = req.params;
-    const video = await Video.findById(videoId);
-    if(!video){
-      throw new ApiError(404, "Video Not Found or Unavailble at the moment"); 
+  // Get videoId from request parameters
+  const { videoId } = req.params;
+  if(!videoId){
+    return new ApiError(400, "Video ID is required")
+  }
+  // Check if videoId is a valid ObjectId format 
+  if (!mongoose.Types.ObjectId.isValid(videoId)) {
+    throw new ApiError(400, "Invalid video ID format");
+  }
+  console.log(typeof(videoId))
+  // Fetch the video document by ID
+  const video = await Video.findById(videoId);
 
-    }
-    
-    return res.status(200).json(new ApiResponse(200,{video},"Video details"))
+  // Check if the video was found
+  if (!video) {
+    throw new ApiError(404, "Video Not Found or Unavailable at the moment");
+  }
+
+  //  video details in the response
+  return res.status(200).json(new ApiResponse(200, { video }, "Video details"));
+});
 
 
-   
-})
+const GetallVideos = asyncHandler(async (req, res) => {
+  // Retrieve all published videos and populate the owner (username)
+  const videos = await Video.find({ isPublished: true })
+    .populate({
+      path: 'owner',         // Reference to the User model
+      select: 'username avatar',    // Only select the username field
+    })
+    .exec();
+
+  // Check if videos exist
+  if (!videos || videos.length === 0) {
+    return res.status(500).json(new ApiError(500, "No videos found"));
+  }
+
+  // Return the videos with the populated owner data
+  return res.status(200).json(new ApiResponse(200, { videos }, "Videos List"));
+});
 
 const UpdateVideoDetails = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
@@ -172,4 +199,4 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
 })
 
 
-export { uploadVideoOnchannel ,UpdateVideoDetails,getVideoById,togglePublishStatus,deleteVideo};
+export { uploadVideoOnchannel,GetallVideos ,UpdateVideoDetails,getVideoById,togglePublishStatus,deleteVideo};
