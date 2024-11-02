@@ -86,7 +86,11 @@ const getVideoById = asyncHandler(async (req, res) => {
   }
   console.log(typeof(videoId))
   // Fetch the video document by ID
-  const video = await Video.findById(videoId);
+  const video = await Video.findById(videoId).populate({
+    path: 'owner',         // Reference to the User model
+    select: 'username avatar',    // Only select the username field
+  })
+  .exec();
 
   // Check if the video was found
   if (!video) {
