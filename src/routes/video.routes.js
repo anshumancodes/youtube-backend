@@ -1,6 +1,6 @@
 import { verifyJwt } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
-import { uploadVideoOnchannel ,UpdateVideoDetails,getVideoById, deleteVideo} from "../controllers/video.controller.js";
+import { uploadVideoOnchannel ,UpdateVideoDetails,getVideoById, deleteVideo,GetallVideos} from "../controllers/video.controller.js";
 
 
 
@@ -15,7 +15,8 @@ router.route("/upload").post(verifyJwt,upload.fields([
 
 router.route("/play/:videoId").get(getVideoById); // videos can be played without tokens 
 router.route("/update/:videoId").put(verifyJwt,upload.fields([{name:"thumbnail",maxCount:1},]),UpdateVideoDetails); // can be done by owner only
-router.route("/delete/:videoId").delete(verifyJwt,deleteVideo)
+router.route("/delete/:videoId").delete(verifyJwt,deleteVideo);
+router.route("/getvideos").get(GetallVideos);
 
 
 export default router;
