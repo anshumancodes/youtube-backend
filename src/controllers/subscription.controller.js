@@ -2,7 +2,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { Video } from "../models/video.model.js";
 import {Subscription} from "../models/subscription.model.js"
 import {ApiError} from "../utils/ApiError.js"
-import {ApiResponse} from "../utils/ApiResponse.js"
+import ApiResponse from "../utils/ApiResponse.js";
+
 
 
 // strucutre of subscription schema
@@ -16,38 +17,35 @@ import {ApiResponse} from "../utils/ApiResponse.js"
 // to toggle subcription , we will get channel id - check if subscriber has the channel matched if matched unsubcribed , else subscribe 
 
 
-const toggleSubcription=asyncHandler(async(req,res)=>{
-    const {channelId}=req.params;
-    const {subscriber}=req.user;
-
-    const isSubcribed=Subscription.findOne({
-        subscriber,
-        channel:channelId
+const toggleSubscription = asyncHandler(async (req, res) => {
+    const { channelId } = req.params;
+    const user= req.user.id; // Fixed: Access user ID properly
+    console.log(user,"->",channelId)
+    // Fixed: Added await and proper error checking
+    const isSubscribed = await Subscription.findOne({
+        subscriber: user,
+        channel: channelId
     });
-    if(isSubcribed){
-        await Subscription.deleteOne({
-            subscriber: subscriber,
+
+    if (isSubscribed) {
+        // Unsubscribe
+       const removedSubscription= await Subscription.findByIdAndDelete(isSubscribed._id);
+        return res.status(200).json(
+            new ApiResponse(200,{removedSubscription} ,"Unsubscribed")
+        );
+    } else {
+        // Subscribe
+        const subscription = await Subscription.create({
+            subscriber: user,
             channel: channelId
         });
-        return res.status(200).json(new ApiResponse(200, "Unsubscribed!"));
+        
+        // Fixed: Remove unnecessary save() call since create() already saves
+        return res.status(200).json(
+            new ApiResponse(200,{subscription} ,"Subscribed")
+        );
     }
-    else{
-        const newSubscription=new Subscription({
-            subscriber,
-            channel:channelId
-    });
-    await newSubscription.save();
-
-    return res.status(200).json(new ApiResponse(200, "Subscribed!"));
-
-
-
-}
-
-    
-
-
-})
+});
 
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     const {channelId} = req.params;
@@ -72,7 +70,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 })
 
 
-export {toggleSubcription,getUserChannelSubscribers}
+export {toggleSubscription,getUserChannelSubscribers}
 
 
 
