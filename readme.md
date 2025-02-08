@@ -19,7 +19,7 @@ A robust backend API that replicates core YouTube functionalities, built with No
 - **Framework**: Express.js
 - **Database**: MongoDB
 - **Container**: Docker
-- **File Storage**: [Add your storage solution here, e.g., AWS S3, Local filesystem]
+- **File Storage**: [Cloudinary](https://cloudinary.com/)
 - **Authentication**: JWT (JSON Web Tokens)
 
 ## 🏁 Getting Started
@@ -86,7 +86,7 @@ PORT=3000
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 JWT_REFRESH_SECRET=your_refresh_token_secret
-# Add other required environment variables
+
 ```
 
 ## 📚 API Documentation
